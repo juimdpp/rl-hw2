@@ -122,3 +122,8 @@ https://gymnasium.farama.org/environments/mujoco/humanoid/
 You can customize the Observation, Reward, and Termination Condition in `custom_walker2d.py` & `custom_humanoid3d.py`.  We recommend modifying the sections marked with `TODO`.
 
 Note: Do not modify the XML file path or environment parameters in `__init__`. Test will be based on the default environment setup.
+
+
+## Motion Data 
+
+The motion data came from repository https://github.com/lsw9021/MASS.git.
