@@ -35,7 +35,7 @@ class CustomEnvWrapper(gym.Wrapper):
 
     def step(self, action):
         obs, reward, terminated, truncated, info = self.env.step(action)
-        self.update_ref_pose(self.env.unwrapped.data.time)
+        self.update_ref_pose(self.env.unwrapped.data.time, obs)
         custom_obs = self.custom_observation(obs)
         custom_reward = self.custom_reward(obs)
         custom_terminated = self.custom_terminated(terminated)
@@ -44,8 +44,9 @@ class CustomEnvWrapper(gym.Wrapper):
 
     def update_ref_pose(self, time):
         ref_pos = self.ref_motion.get_ref_poses(time)
-        self.env.unwrapped.data.qpos[-self.ref_skel_dof:] = ref_pos # ref_pos
+        self.env.unwrapped.data.qpos[-self.ref_skel_dof:] = ref_pos # ref_pos]
         self.env.unwrapped.data.qvel[-(self.ref_skel_dof-1):] *= 0.0
+        obs[18:36] = ref_pos
         self.ref_pos = ref_pos.copy()
 
     def custom_pd_actuator(self, target_offset):

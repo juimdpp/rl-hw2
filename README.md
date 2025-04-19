@@ -3,6 +3,14 @@
 This repository contains the skeleton code for Assignment #2 of the SNU Human Motion course.  
 It is based on the [Walker2d-v5 & Humanoid3d-v5](https://github.com/Farama-Foundation/Gymnasium) environment from OpenAI Gymnasium, and demonstrates training using PPO from [Stable-Baselines3](https://stable-baselines3.readthedocs.io/en/master/).
 
+## ⚠️ IMPORTANT NOTES
+
+[16:34 04/16] Skeleton code updated (Adjusted the range of thigh joints in custom_walker2d_ref.xml)
+
+[15:26 04/19] For '2D Bipedal with References', when comparing `ref_pos[1] (=obs[11])` and `obs[1]`, make sure to compare `ref_pos[1] + 1.25` with `obs[1]` due to the reference height offset in the model.
+
+[15:26 04/19] Fix bug in update_ref_pose.
+
 ## Installation
 
 We have tested this code on Ubuntu 22.04 and macOS M1.
@@ -77,6 +85,7 @@ The action space is 6-dimensional (R^6) and controls joint torques:
 | [21:27]     | Joint angular velocities         | Angular velocities of all joints         |
 
 *Note: You can modify the observation space as needed, as long as you don't directly modify the character's physical information.*
+
 
 #### Environment Details
 

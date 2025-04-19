@@ -22,21 +22,22 @@ class CustomEnvWrapper(gym.Wrapper):
         obs, _ = self.reset()   
         self.observation_space = gym.spaces.Box(low=-np.inf, high=np.inf, shape=(len(obs),), dtype=np.float64)
     
-    def update_ref_pose(self, time):
+    def update_ref_pose(self, time, obs):
         ref_pos = self.ref_motion.get_ref_poses(time)
         self.env.unwrapped.data.qpos[-self.sim_skel_dof:] = ref_pos
         self.env.unwrapped.data.qvel[-self.sim_skel_dof:] *= 0.0
+        obs[9:18] = ref_pos
         self.ref_pos = ref_pos.copy()
 
     def reset(self, **kwargs):
         obs, info = self.env.reset(**kwargs)
-        self.update_ref_pose(self.env.unwrapped.data.time)
+        self.update_ref_pose(self.env.unwrapped.data.time, obs)
         custom_obs = self.custom_observation(obs)
         return custom_obs, info
 
     def step(self, action):
         obs, _, terminated, truncated, info = self.env.step(action) # or self.env.step(self.custom_pd_actuator(action))
-        self.update_ref_pose(self.env.unwrapped.data.time)
+        self.update_ref_pose(self.env.unwrapped.data.time, obs)
         custom_obs = self.custom_observation(obs)
         custom_reward = self.custom_reward(obs)
         custom_terminated = self.custom_terminated(terminated)
@@ -66,6 +67,7 @@ class CustomEnvWrapper(gym.Wrapper):
     def custom_reward(self, obs):
         imitation_reward = 0.0
         # TODO: Implement your own imitation reward
+        # [** IMPORTANT **] when comparing self.ref_pos[1] and obs[1] (root z), compare "self.ref_pos[1] + 1.25" and "obs[1]"
         return imitation_reward
 
 ## Test
