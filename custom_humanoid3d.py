@@ -29,7 +29,7 @@ class CustomEnvWrapper(gym.Wrapper):
         
     def reset(self, **kwargs):
         obs, info = self.env.reset(**kwargs)
-        self.update_ref_pose(self.env.unwrapped.data.time)
+        self.update_ref_pose(self.env.unwrapped.data.time, obs)
         custom_obs = self.custom_observation(obs)
         return custom_obs, info
 
@@ -42,7 +42,7 @@ class CustomEnvWrapper(gym.Wrapper):
         custom_truncated = self.custom_truncated(truncated)
         return custom_obs, custom_reward, custom_terminated, custom_truncated, info
 
-    def update_ref_pose(self, time):
+    def update_ref_pose(self, time, obs):
         ref_pos = self.ref_motion.get_ref_poses(time)
         self.env.unwrapped.data.qpos[-self.ref_skel_dof:] = ref_pos # ref_pos]
         self.env.unwrapped.data.qvel[-(self.ref_skel_dof-1):] *= 0.0
