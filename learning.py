@@ -36,5 +36,8 @@ if __name__ == "__main__":
     motion_path = "/asset/motions/" + args.motion
     env = SubprocVecEnv([make_env(motion_path = motion_path) for _ in range(num_cpu)])
     env = VecMonitor(env)
-    model = PPO("MlpPolicy", env, verbose=1, tensorboard_log="./logs/", policy_kwargs=policy_kwargs, device="cpu", learning_rate=0.0001)
+
+    # You are allowed to change any parameters
+    model = PPO("MlpPolicy", env, verbose=1, tensorboard_log="./logs/", policy_kwargs=policy_kwargs, device="cpu", learning_rate=0.0001, batch_size=64, n_steps=2048)
+    
     model.learn(total_timesteps=10000000000, callback=checkpoint_callback)
