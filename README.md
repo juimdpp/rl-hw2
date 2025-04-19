@@ -11,6 +11,9 @@ It is based on the [Walker2d-v5 & Humanoid3d-v5](https://github.com/Farama-Found
 
 [15:26 04/19] Fix bug in update_ref_pose.
 
+[18:52 04/19] Fix bug in update_ref_pose (humanoid3d).
+
+
 ## Installation
 
 We have tested this code on Ubuntu 22.04 and macOS M1.
