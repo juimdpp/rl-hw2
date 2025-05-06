@@ -13,6 +13,7 @@ It is based on the [Walker2d-v5 & Humanoid3d-v5](https://github.com/Farama-Found
 
 [18:52 04/19] Fix bug in update_ref_pose (humanoid3d).
 
+[04:12 05/07] `ref_pos[1] (=obs[11])` -> 'ref_pos[1] (=obs[10])'
 
 ## Installation
 
