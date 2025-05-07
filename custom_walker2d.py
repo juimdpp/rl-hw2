@@ -42,6 +42,12 @@ class CustomEnvWrapper(gym.Wrapper):
         custom_reward = self.custom_reward(obs)
         custom_terminated = self.custom_terminated(terminated)
         custom_truncated = self.custom_truncated(truncated)
+        
+        # Add reward components to `info` dict
+        info["pose_diff"] = getattr(self, "last_pose_diff", 0)
+        info["root_diff"] = getattr(self, "last_root_diff", 0)
+        info["vel_diff"] = getattr(self, "last_vel_diff", 0)
+        
         return custom_obs, custom_reward, custom_terminated, custom_truncated, info
 
     def custom_pd_actuator(self, target_offset):
@@ -65,10 +71,47 @@ class CustomEnvWrapper(gym.Wrapper):
         return obs
 
     def custom_reward(self, obs):
-        imitation_reward = 0.0
-        # TODO: Implement your own imitation reward
-        # [** IMPORTANT **] when comparing self.ref_pos[1] and obs[1] (root z), compare "self.ref_pos[1] + 1.25" and "obs[1]"
-        return imitation_reward
+        # 1. Pose imitation reward (joint angle difference)
+        sim_joint_angles = obs[3:9]
+        ref_joint_angles = obs[12:18]  # Only first 6 reference joints match
+        pose_diff = np.square(ref_joint_angles - sim_joint_angles)
+        pose_reward = np.exp(-2 * np.sum(pose_diff))
+
+        # 2. Root height reward (z position comparison)
+        sim_root_z = obs[1]
+        ref_root_z = self.ref_pos[1] + 1.25  # Apply offset
+        root_diff = (sim_root_z - ref_root_z) ** 2
+        root_reward = np.exp(-10 * root_diff)
+
+        # 3. Joint velocity reward (angular vel difference)
+        sim_joint_vels = obs[21:27]
+        # Calculate reference joint velocities manually
+        time = self.env.unwrapped.data.time
+        delta_time = 0.02  # Assuming fixed time step (adjust as needed)
+        
+        # Get current and next reference joint angles
+        ref_joint_angles_current = self.ref_motion.get_ref_poses(time)[3:]
+        ref_joint_angles_next = self.ref_motion.get_ref_poses(time + delta_time)[3:]
+        
+        # Compute joint velocities (difference in angles over time)
+        ref_joint_vels = (ref_joint_angles_next - ref_joint_angles_current) / delta_time
+        
+        vel_diff = np.square(ref_joint_vels - sim_joint_vels)
+        vel_reward = np.exp(-0.1 * np.sum(vel_diff))
+
+        # Final reward (weights from DeepMimic)
+        reward = (
+            0.65 * pose_reward +
+            0.15 * root_reward +
+            0.20 * vel_reward
+        )
+
+        # Store for logging later
+        self.last_pose_diff = np.sum(pose_diff)
+        self.last_root_diff = root_diff
+        self.last_vel_diff = np.sum(vel_diff)
+
+        return reward
 
 ## Test
 if __name__ == "__main__":
