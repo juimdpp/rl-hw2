@@ -75,13 +75,18 @@ class CustomEnvWrapper(gym.Wrapper):
         sim_joint_angles = obs[3:9]
         ref_joint_angles = obs[12:18]  # Only first 6 reference joints match
         pose_diff = np.square(ref_joint_angles - sim_joint_angles)
-        pose_reward = np.exp(-2 * np.sum(pose_diff))
+        pose_reward = np.exp(-7 * np.sum(pose_diff))
 
         # 2. Root height reward (z position comparison)
         sim_root_z = obs[1]
         ref_root_z = self.ref_pos[1] + 1.25  # Apply offset
-        root_diff = (sim_root_z - ref_root_z) ** 2
-        root_reward = np.exp(-10 * root_diff)
+        root_z_diff = (sim_root_z - ref_root_z) ** 2
+        root_z_reward = np.exp(-5 * root_z_diff)
+        sim_root_x = obs[0]
+        ref_root_x = self.ref_pos[0]
+        root_x_diff = (sim_root_x - ref_root_x) ** 2
+        root_x_reward = np.exp(-5 * root_x_diff)
+        root_reward = root_z_reward + root_x_reward
 
         # 3. Joint velocity reward (angular vel difference)
         sim_joint_vels = obs[21:27]
@@ -97,18 +102,18 @@ class CustomEnvWrapper(gym.Wrapper):
         ref_joint_vels = (ref_joint_angles_next - ref_joint_angles_current) / delta_time
         
         vel_diff = np.square(ref_joint_vels - sim_joint_vels)
-        vel_reward = np.exp(-0.1 * np.sum(vel_diff))
+        vel_reward = np.exp(-2 * np.sum(vel_diff))
 
         # Final reward (weights from DeepMimic)
         reward = (
-            0.65 * pose_reward +
-            0.15 * root_reward +
-            0.20 * vel_reward
+            0.7 * pose_reward +
+            0.5 * root_reward 
+            # 0.20 * vel_reward
         )
 
         # Store for logging later
         self.last_pose_diff = np.sum(pose_diff)
-        self.last_root_diff = root_diff
+        self.last_root_diff = root_z_diff
         self.last_vel_diff = np.sum(vel_diff)
 
         return reward
