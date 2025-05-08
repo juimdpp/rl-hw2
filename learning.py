@@ -44,7 +44,7 @@ if __name__ == "__main__":
     import numpy as np
     # Extract timestep from filename, e.g., "model_walker_model_50000.zip"
     def extract_step(path):
-        match = re.search(r"_(\d+)_steps\.zip$", path)
+        match = re.search(r"_(\d+)\.zip$", path)
         return int(match.group(1)) if match else 0
 
     if args.resume:
@@ -82,6 +82,5 @@ if __name__ == "__main__":
             verbose=1
         )
 
-    # model.learn(total_timesteps=10000000, callback=checkpoint_callback)
     model.learn(total_timesteps=10000000000, callback=checkpoint_callback)
     # model.save(f"models/{args.model_name}")

@@ -19,6 +19,7 @@ env = CustomEnvWrapper(render_mode="human", motion_path=motion_path)
 model = PPO.load(args.model, env=env) if args.model is not None else None
 obs, _ = env.reset()
 
+import numpy as np
 
 while True:
     if model is not None:
@@ -26,5 +27,6 @@ while True:
     else:
         action = env.action_space.sample()
     obs, reward, terminated, truncated, _ = env.step(action)
+    print(obs[9] - obs[0], np.sum(obs[3:9] - obs[12:18] > 0.34))
     if terminated or truncated:
         obs, _ = env.reset()
