@@ -16,7 +16,7 @@ else:
 motion_path = "/asset/motions/" + args.motion
 
 env = CustomEnvWrapper(render_mode="human", motion_path=motion_path)
-model = PPO.load(args.model) if args.model is not None else None
+model = PPO.load(args.model, env=env) if args.model is not None else None
 obs, _ = env.reset()
 
 

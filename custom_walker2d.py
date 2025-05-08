@@ -42,6 +42,7 @@ class CustomEnvWrapper(gym.Wrapper):
         custom_reward = self.custom_reward(obs)
         custom_terminated = self.custom_terminated(terminated)
         custom_truncated = self.custom_truncated(truncated)
+        
         return custom_obs, custom_reward, custom_terminated, custom_truncated, info
 
     def custom_pd_actuator(self, target_offset):
@@ -65,10 +66,25 @@ class CustomEnvWrapper(gym.Wrapper):
         return obs
 
     def custom_reward(self, obs):
-        imitation_reward = 0.0
-        # TODO: Implement your own imitation reward
-        # [** IMPORTANT **] when comparing self.ref_pos[1] and obs[1] (root z), compare "self.ref_pos[1] + 1.25" and "obs[1]"
-        return imitation_reward
+        # 1. Pose imitation reward (joint angle difference)
+        sim_joint_angles = obs[3:9]
+        ref_joint_angles = obs[12:18]  # Only first 6 reference joints match
+        pose_diff = np.square(ref_joint_angles - sim_joint_angles)
+        pose_reward = np.exp(-5 * np.sum(pose_diff))
+
+        # 2. Root height reward (z position comparison)
+        sim_root_z = obs[1]
+        ref_root_z = self.ref_pos[1] + 1.25  # Apply offset
+        root_diff = (sim_root_z - ref_root_z) ** 2
+        root_reward = np.exp(-5 * root_diff)
+
+        # Final reward (weights from DeepMimic)
+        reward = (
+            0.7 * pose_reward +
+            0.7 * root_reward 
+            # 0.20 * vel_reward
+        )
+        return reward
 
 ## Test
 if __name__ == "__main__":
@@ -76,5 +92,5 @@ if __name__ == "__main__":
     obs, _ = env.reset() 
     while True:
         action = env.action_space.sample()
-        obs, reward, terminated, truncated, info = env.step(action)
+        obs, reward, terminated, truncated, info = env.step(env.custom_pd_actuator(action))
         env.render()
