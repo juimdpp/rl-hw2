@@ -2,6 +2,7 @@ from motion import Motion
 import numpy as np
 import gymnasium as gym
 import os
+import math
 
 class CustomEnvWrapper(gym.Wrapper):
     def __init__(self, render_mode="human", motion_path="/asset/motions/walk.bvh"):
@@ -33,6 +34,7 @@ class CustomEnvWrapper(gym.Wrapper):
         obs, info = self.env.reset(**kwargs)
         self.update_ref_pose(self.env.unwrapped.data.time, obs)
         custom_obs = self.custom_observation(obs)
+        self.timestep_counter = 0
         return custom_obs, info
 
     def step(self, action):
@@ -47,7 +49,8 @@ class CustomEnvWrapper(gym.Wrapper):
         info["pose_diff"] = getattr(self, "last_pose_diff", 0)
         info["root_diff"] = getattr(self, "last_root_diff", 0)
         info["vel_diff"] = getattr(self, "last_vel_diff", 0)
-        
+        self.timestep_counter += 1
+
         return custom_obs, custom_reward, custom_terminated, custom_truncated, info
 
     def custom_pd_actuator(self, target_offset):
@@ -71,11 +74,17 @@ class CustomEnvWrapper(gym.Wrapper):
         return obs
 
     def custom_reward(self, obs):
+        time = self.env.unwrapped.data.time
         # 1. Pose imitation reward (joint angle difference)
         sim_joint_angles = obs[3:9]
         ref_joint_angles = obs[12:18]  # Only first 6 reference joints match
         pose_diff = np.square(ref_joint_angles - sim_joint_angles)
-        pose_reward = np.exp(-2 * np.sum(pose_diff))
+        T_mid = 250    # midpoint (e.g., 250 steps)
+        sharpness = 0.02  # smoother curve
+
+        sigmoid = 1 / (1 + math.exp(-sharpness * (self.timestep_counter - T_mid)))
+        weight = 0.65 + sigmoid * (2 - 0.65)
+        pose_reward = np.exp(-weight * np.sum(pose_diff))
 
         # 2. Root height, x reward (x, z position comparison)
         sim_root_z = obs[1]
@@ -84,12 +93,16 @@ class CustomEnvWrapper(gym.Wrapper):
         sim_root_x = obs[0]
         ref_root_x = self.ref_pos[0]
         root_x_diff = (sim_root_x - ref_root_x) ** 2
-        root_reward = np.exp(-10 * (root_z_diff + root_x_diff))
+        T_mid = 250    # midpoint (e.g., 250 steps)
+        sharpness = 0.02  # smoother curve
+
+        sigmoid = 1 / (1 + math.exp(-sharpness * (self.timestep_counter - T_mid)))
+        weight = 1 + sigmoid * (10 - 1)
+        root_reward = np.exp(-weight * (root_z_diff + root_x_diff))
 
         # 3. Joint velocity reward (angular vel difference)
         sim_joint_vels = obs[21:27]
         # Calculate reference joint velocities manually
-        time = self.env.unwrapped.data.time
         delta_time = 0.02  # Assuming fixed time step (adjust as needed)
         # Get current and next reference joint angles
         ref_joint_angles_current = self.ref_motion.get_ref_poses(time)[3:]

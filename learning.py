@@ -3,7 +3,7 @@ from stable_baselines3.common.vec_env import SubprocVecEnv, VecMonitor
 from stable_baselines3.common.callbacks import CheckpointCallback
 from custom_checkpoint_callback import CustomCheckpointCallback  # save the class in this file
 
-N_ENVS = 4
+N_ENVS = 8
 freq = 50000
 
 policy_kwargs = dict(
