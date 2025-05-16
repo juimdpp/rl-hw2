@@ -48,7 +48,7 @@ if __name__ == "__main__":
         return int(match.group(1)) if match else 0
 
     if args.resume:
-        checkpoint_files = glob.glob(f"./checkpoints/{args.model_name}_walker_model_*.zip")
+        checkpoint_files = glob.glob(f"./checkpoints_3d/{args.model_name}_walker_model_*.zip")
         if len(checkpoint_files) == 0:
             raise FileNotFoundError("No checkpoint files found to resume from.")
         step_list = list(map(extract_step, checkpoint_files))
@@ -64,7 +64,7 @@ if __name__ == "__main__":
         # Redefine checkpoint callback with offset
         checkpoint_callback = CustomCheckpointCallback(
             save_freq=freq,
-            save_path='./checkpoints/',
+            save_path='./checkpoints_3d/',
             name_prefix=f"{args.model_name}_walker_model",
             save_start=last_step + freq,  # Start saving from next logical step
             verbose=1
@@ -76,7 +76,7 @@ if __name__ == "__main__":
                     learning_rate=0.0001, batch_size=256, n_steps=4056)
         checkpoint_callback = CustomCheckpointCallback(
             save_freq=freq,
-            save_path='./checkpoints/',
+            save_path='./checkpoints_3d/',
             name_prefix=f"{args.model_name}_walker_model",
             save_start=0,
             verbose=1

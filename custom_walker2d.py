@@ -81,15 +81,6 @@ class CustomEnvWrapper(gym.Wrapper):
         # ref_joint_angles = obs_wo_ref_vel[12:18]
         # joint_angle_diff = ref_joint_angles - sim_joint_angles
 
-        # # Joint velocities (6 DoF)
-        # sim_joint_vels = obs[21:27]
-        # time = self.env.unwrapped.data.time
-        # delta_time = 0.02
-        # ref_joint_angles_current = self.ref_motion.get_ref_poses(time)[3:]
-        # ref_joint_angles_next = self.ref_motion.get_ref_poses(time + delta_time)[3:]
-        # ref_joint_vels = (ref_joint_angles_next - ref_joint_angles_current) / delta_time
-        # joint_vel_diff = ref_joint_vels - sim_joint_vels
-
         # Final observation: relative root x/z, root angle, joint angle diff, joint vel diff
         mod_obs = np.concatenate((
             obs_wo_ref_vel,           
