@@ -4,7 +4,7 @@ from stable_baselines3.common.callbacks import CheckpointCallback
 from custom_checkpoint_callback import CustomCheckpointCallback  # save the class in this file
 
 N_ENVS = 8
-freq = 50000
+freq = 500000
 
 policy_kwargs = dict(
     net_arch=[dict(pi=[128, 64, 64], vf=[128, 64, 64])],
@@ -73,7 +73,7 @@ if __name__ == "__main__":
         last_step = 0
         model = PPO("MlpPolicy", env, verbose=1, tensorboard_log=f"./logs/{args.model_name}",
                     policy_kwargs=policy_kwargs, device="cpu",
-                    learning_rate=0.0001, batch_size=64, n_steps=2048)
+                    learning_rate=0.0001, batch_size=256, n_steps=4056)
         checkpoint_callback = CustomCheckpointCallback(
             save_freq=freq,
             save_path='./checkpoints/',

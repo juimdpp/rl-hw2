@@ -27,6 +27,6 @@ while True:
     else:
         action = env.action_space.sample()
     obs, reward, terminated, truncated, _ = env.step(action)
-    print(obs[9] - obs[0], np.sum(obs[3:9] - obs[12:18] > 0.34))
+    print(obs[-2], np.sum(obs[3:9] - obs[12:18] > 0.34))
     if terminated or truncated:
         obs, _ = env.reset()
