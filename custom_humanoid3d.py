@@ -71,13 +71,31 @@ class CustomEnvWrapper(gym.Wrapper):
     def custom_observation(self, obs):
         # Remove reference skeleton velocities (last 16 elements) — always zero, not informative.
         obs = obs[:-(self.ref_skel_dof - 1)] 
-        # TODO : Implement your own observation
+        # Step 1: Extract components
+        root_pos = obs[0:3]
+        # Step 2: Compute relative root position (w.r.t. reference position)
+        obs[0:3] = self.ref_pos[:3] - root_pos
+        
         return obs
 
+
     def custom_reward(self, obs):
-        imitation_reward = 0.0
-        # TODO: Implement your own imitation reward
-        return imitation_reward
+        # Pose matching
+        sim_joint_angles = obs[7:18]
+        ref_joint_angles = obs[25:36]
+        pose_diff = ref_joint_angles - sim_joint_angles
+        pose_reward = np.exp(-0.5 * np.sum(np.square(pose_diff)))
+
+        # Root position matching
+        rel_root_pos = obs[-3:]
+        root_pos_reward = np.exp(-0.2 * np.linalg.norm(rel_root_pos))
+
+        # Combine multiplicatively
+        reward = pose_reward * root_pos_reward 
+
+        return reward
+
+            
 
 ## Test Rendering
 if __name__ == "__main__":
