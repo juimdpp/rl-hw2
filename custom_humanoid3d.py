@@ -84,11 +84,11 @@ class CustomEnvWrapper(gym.Wrapper):
         sim_joint_angles = obs[7:18]
         ref_joint_angles = obs[25:36]
         pose_diff = ref_joint_angles - sim_joint_angles
-        pose_reward = np.exp(-0.5 * np.sum(np.square(pose_diff)))
+        pose_reward = np.exp(-0.1 * np.sum(np.square(pose_diff)))
 
         # Root position matching
         rel_root_pos = obs[-3:]
-        root_pos_reward = np.exp(-0.2 * np.linalg.norm(rel_root_pos))
+        root_pos_reward = np.exp(-0.1 * np.linalg.norm(rel_root_pos))
 
         # Combine multiplicatively
         reward = pose_reward * root_pos_reward 
